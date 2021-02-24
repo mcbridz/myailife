@@ -1,13 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<!-- Vue JS CDN DEVELOPMENT-->
-<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
 
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- font-awesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/all.css"
+        integrity="sha384-vp86vTRFVJgpjF9jiIGPEEqYqlDwgyBgEF109VFjmqGmIY/Y4HV4d3Gp2irVfcrp" crossorigin="anonymous">
+
+    <!-- Vue JS CDN DEVELOPMENT-->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+
+    <!-- Axios -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.20.0/axios.min.js"
+        integrity="sha512-quHCp3WbBNkwLfYUMd+KwBAgpVukJu5MncuQaWXgCrfgcxCJAq/fo+oqrRKOj+UKEmyMCG3tb8RB63W+EmrOBg=="
+        crossorigin="anonymous"></script>
+
+
     <title>MyAILife</title>
     <style>
 
@@ -21,7 +33,14 @@
 
         </div>
         <div id="bodyContent">
-
+            <div v-if="status == 'postView'">
+                <div v-for="(post, index) in posts">
+                    [% post.text %]
+                    <div v-for="(comment, index) in post.comments">
+                        [% comment.text %]
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="bottomNav">
 
@@ -33,8 +52,26 @@
             el: '#app',
             delimiters: ['[%', '%]'],
             data: {
-
+                message: 'message',
+                status: 'postView',
+                posts: [],
             },
+            methods: {
+                getPosts: function () {
+                    axios({
+                        method: 'get',
+                        url: '{% url "myailife:get_posts"%}',
+
+                    }).then(response => {
+                        console.log(response.data)
+                        this.posts = response.data['posts']
+
+                    })
+                },
+            },
+            created: function () {
+                this.getPosts()
+            }
         })
     </script>
 </body>
