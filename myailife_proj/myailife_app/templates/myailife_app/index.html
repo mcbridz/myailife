@@ -34,13 +34,29 @@
         </div>
         <div id="bodyContent">
             <div v-if="status == 'postView'">
+                <button type="button" @click="status = 'addPost'; writingNewComment = false">Write New Post</button>
                 <div v-for="(post, index) in posts">
                     [% post.text %]
                     <div v-for="(comment, index) in post.comments">
                         [% comment.text %]
                     </div>
+                    <button type="button" @click="writingNewComment = true; postCommentingOn = post.id">Comment</button>
+                    <button type="button" @click="deletePost(post.id)">Delete Post</button>
                 </div>
             </div>
+            <form v-if="writingNewComment">
+                <textarea placeholder="Comment Text Here" v-model="comment"></textarea>
+                <button type="button" @click="newComment">Add Comment</button>
+                <button type="button" @click="writingNewComment = false; postCommentingOn = 0; comment = ''">Discard
+                    Comment</button>
+            </form>
+            <!-- When you get to adding photos, remember to add enctype -->
+            <form v-if="status == 'addPost'">
+                <button type="button" @click="status = 'postView'">View Posts</button>
+                <input maxlength="255" type="text" v-model="addPostData.subject">
+                <textarea type="text" v-model="addPostData.text"></textarea>
+                <button type="button" @click="addPost">Add Post</button>
+            </form>
         </div>
         <div id="bottomNav">
 
@@ -55,12 +71,19 @@
                 message: 'message',
                 status: 'postView',
                 posts: [],
+                addPostData: {
+                    subject: 'Subject Here',
+                    text: 'Post Text Here',
+                },
+                writingNewComment: false,
+                postCommentingOn: 0,
+                comment: '',
             },
             methods: {
                 getPosts: function () {
                     axios({
                         method: 'get',
-                        url: '{% url "myailife:get_posts"%}',
+                        url: '{% url "myailife:getPosts"%}',
 
                     }).then(response => {
                         console.log(response.data)
@@ -68,6 +91,38 @@
 
                     })
                 },
+                addPost: function () {
+                    axios({
+                        method: 'post',
+                        url: '{% url "myailife:addPost" %}',
+                        data: this.addPostData,
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                        }
+                    }).then(response => {
+                        console.log(response.data)
+                        this.message = response.data['message']
+                        this.getPosts()
+                    })
+                },
+                deletePost: function (id) {
+                    console.log(id)
+                    axios({
+                        method: 'post',
+                        url: '{% url "myailife:deletePost" %}',
+                        data: { 'id': id },
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    }).then(response => {
+                        console.log(response.data)
+                        this.message = response.data['message']
+                        this.getPosts()
+                    })
+                },
+                newComment: function () {
+
+                }
             },
             created: function () {
                 this.getPosts()

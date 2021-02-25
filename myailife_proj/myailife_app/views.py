@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from .models import Comment, Post
+import json
 
 
 def index(request):
@@ -42,3 +43,20 @@ def getPosts(request):
             'comments': comments_list
         })
     return JsonResponse({'posts': post_list})
+
+
+def addPost(request):
+    new_post_data = json.loads(request.body)
+    new_post = Post(title=new_post_data['subject'], text=new_post_data['text'])
+    new_post.save()
+    return JsonResponse({'message': 'Post Added'})
+
+
+def deletePost(request):
+    post_id = json.loads(request.body)['id']
+    post = Post.objects.filter(id=post_id)
+    if post.exists():
+        post.delete()
+        return JsonResponse({'message': 'Post Deleted'})
+    else:
+        return JsonResponse({'message': 'An Error Occurred, Please Contact Administrator'})

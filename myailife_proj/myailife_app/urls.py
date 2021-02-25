@@ -5,5 +5,7 @@ app_name = 'myailife'
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('get_posts', views.getPosts, name='get_posts'),
+    path('getPosts', views.getPosts, name='getPosts'),
+    path('addPost', views.addPost, name='addPost'),
+    path('deletePost', views.deletePost, name='deletePost')
 ]
