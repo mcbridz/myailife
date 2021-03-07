@@ -78,6 +78,7 @@
                 writingNewComment: false,
                 postCommentingOn: 0,
                 comment: '',
+                key: '',
             },
             methods: {
                 getPosts: function () {
@@ -124,7 +125,7 @@
                 newComment: function () {
                     axios({
                         method: 'post',
-                        url: '{%  %}',
+                        url: '',
                         data: {
                             'id': this.postCommentingOn,
                             'text': this.comment
@@ -137,10 +138,22 @@
                         this.message = response.data
                         this.getPosts()
                     })
+                },
+                getKey: function () {
+                    axios({
+                        method: 'get',
+                        url: '{% url "myailife:getKey" %}',
+                    }).then(response => {
+                        console.log(response.data)
+                        this.key = response.data['key']
+                        sessionStorage.setItem('key', this.key)
+                    })
                 }
             },
             created: function () {
                 this.getPosts()
+                let key = sessionStorage.getItem('key')
+                console.log(key)
             }
         })
     </script>

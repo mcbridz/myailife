@@ -1,7 +1,59 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from .models import Comment, Post
+from .models import Comment, Post, SessionObject
+from django.utils import timezone
 import json
+import random
+import datetime
+
+
+def generateUpper():
+    return chr(random.randrange(65, 91))
+
+
+def generateLower():
+    return chr(random.randrange(97, 123))
+
+
+def generateSpChr():
+    return chr(random.randrange(33, 48))
+
+
+def generateNum():
+    return str(random.randrange(0, 10))
+
+
+def split(word):
+    return [char for char in word]
+
+
+def generateSessionKey():
+    key = ''
+    for num in range(4):
+        key += generateUpper()
+        key += generateLower()
+        key += generateSpChr()
+        key += generateNum()
+    key = split(key)
+    shufflingTime = random.randrange(0, 9) + 7
+    shufflingTime *= 17
+    for i in range(shufflingTime):
+        random.shuffle(key)
+    return ''.join(key)
+
+
+def generateSessionObject(key, user):
+    new_session_object = SessionObject(user=user, key=key)
+    new_session_object.save()
+    # This is where we will always delete old objects (>2 days)
+    old_session_objects = SessionObject.filter(
+        date_created__lte=(timezone.now() - datetime.timedelta(days=2)))
+    for obj in old_session_objects:
+        obj.delete()
+
+
+def checkSessionObject(key, user):
+    return SessionObject.filter(user=user, key=key).exists()
 
 
 def index(request):
@@ -59,4 +111,14 @@ def deletePost(request):
         post.delete()
         return JsonResponse({'message': 'Post Deleted'})
     else:
-        return JsonResponse({'message': 'An Error Occurred, Please Contact Administrator'})
+        return JsonResponse({'message': 'An Error Occurred, Please Contact Administrator Error Type: "Mismatched Post ID"'})
+
+
+def newComment(request):
+    new_comment_data = json.loads(request.body)
+
+
+def getKey(request):
+    key = generateSessionKey()
+    generateSessionObject(key, request.user)
+    return JsonResponse({'key': key})
