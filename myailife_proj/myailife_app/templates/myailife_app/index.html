@@ -19,7 +19,6 @@
         integrity="sha512-quHCp3WbBNkwLfYUMd+KwBAgpVukJu5MncuQaWXgCrfgcxCJAq/fo+oqrRKOj+UKEmyMCG3tb8RB63W+EmrOBg=="
         crossorigin="anonymous"></script>
 
-
     <title>MyAILife</title>
     <style>
 
@@ -30,11 +29,14 @@
     <div id="app">
 
         <div id="topNav">
+            <button type="button" @click="status = 'addPost'; writingNewComment = false">Write New Post</button>
 
+            <button type="button" @click="status = 'postView'">View Posts</button>
+
+            <button type="button" @click="status = 'register'">Register!</button>
         </div>
         <div id="bodyContent">
             <div v-if="status == 'postView'">
-                <button type="button" @click="status = 'addPost'; writingNewComment = false">Write New Post</button>
                 <div v-for="(post, index) in posts">
                     [% post.text %]
                     <div v-for="(comment, index) in post.comments">
@@ -52,10 +54,15 @@
             </form>
             <!-- When you get to adding photos, remember to add enctype -->
             <form v-if="status == 'addPost'">
-                <button type="button" @click="status = 'postView'">View Posts</button>
                 <input maxlength="255" type="text" v-model="addPostData.subject">
                 <textarea type="text" v-model="addPostData.text"></textarea>
                 <button type="button" @click="addPost">Add Post</button>
+            </form>
+            <form v-if="status == 'register'">
+                <input type="text" maxlength="24" v-model="register.username">
+                <input type="password" maxlength="24" v-model="register.password" v-on:input="passwordCheck">
+                <input type="password" maxlength="24" v-model="register.vpassword" v-on:input="passwordCheck">
+                <button type="button" @click="register" v-bind:disabled="register.passwordsMatch">Register</button>
             </form>
         </div>
         <div id="bottomNav">
@@ -74,6 +81,12 @@
                 addPostData: {
                     subject: 'Subject Here',
                     text: 'Post Text Here',
+                },
+                register: {
+                    username: '',
+                    password: '',
+                    vpassword: '',
+                    passwordsMatch: false,
                 },
                 writingNewComment: false,
                 postCommentingOn: 0,
@@ -131,7 +144,7 @@
                             'text': this.comment
                         },
                         headers: {
-                            'X-CSRFToken': '{{ csrf_token}}'
+                            'X-CSRFToken': '{{ csrf_token }}'
                         }
                     }).then(response => {
                         console.log(response.data)
@@ -148,6 +161,37 @@
                         this.key = response.data['key']
                         sessionStorage.setItem('key', this.key)
                     })
+                },
+                passwordCheck: function () {
+                    if (this.register.password.localeCompare(this.register.vpassword) && this.register.password.length >= 8) {
+                        this.register.passwordsMatch = true
+                        console.log('Passwords Match!')
+                        this.$forceUpdate()
+                    } else {
+                        this.register.passwordsMatch = false
+                        this.$forceUpdate()
+                    }
+                },
+                register: function () {
+                    this.passwordCheck
+                    if (!this.register.passwordsMatch) {
+                        return
+                    }
+                    else {
+                        axios({
+                            method: 'post',
+                            url: '{%  %}',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            data: {
+                                username: this.register.username
+                            }
+                        }).then(response => {
+                            console.log(response.data)
+                            this.message = response.data['message']
+                        })
+                    }
                 }
             },
             created: function () {

@@ -46,14 +46,14 @@ def generateSessionObject(key, user):
     new_session_object = SessionObject(user=user, key=key)
     new_session_object.save()
     # This is where we will always delete old objects (>2 days)
-    old_session_objects = SessionObject.filter(
+    old_session_objects = SessionObject.objects.filter(
         date_created__lte=(timezone.now() - datetime.timedelta(days=2)))
     for obj in old_session_objects:
         obj.delete()
 
 
 def checkSessionObject(key, user):
-    return SessionObject.filter(user=user, key=key).exists()
+    return SessionObject.object.filter(user=user, key=key).exists()
 
 
 def index(request):
