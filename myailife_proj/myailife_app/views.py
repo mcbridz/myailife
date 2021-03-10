@@ -8,6 +8,8 @@ import json
 import random
 import datetime
 
+# Utility functions
+
 
 def generateUpper():
     return chr(random.randrange(65, 91))
@@ -46,7 +48,8 @@ def generateSessionKey():
 
 def generateSessionObject(new_key, new_user):
     print(new_key, new_user)
-    new_session_object = SessionObject(user_account=new_user, key=new_key)
+    new_session_object = SessionObject(
+        user_account=None if new_user.is_anonymous else new_user, key=new_key)
     new_session_object.save()
     # This is where we will always delete old objects (>2 days)
     old_session_objects = SessionObject.objects.filter(
@@ -73,7 +76,10 @@ def getKey(request):
 
 
 def index(request):
-    context = {}
+    key = generateSessionKey()
+    user = request.user
+    generateSessionObject(key, user)
+    context = {'key': key}
     return render(request, 'myailife_app/index.html', context)
 
 
@@ -155,10 +161,15 @@ def login(request):
     message = ''
     if user is not None:
         django.contrib.auth.login(request, user)
+        key = generateSessionKey()
+        generateSessionObject(key, user)
         message = 'Logged in successfully.'
     else:
+        key = generateSessionKey()
+        user = request.user
+        generateSessionObject(key, user)
         message = 'Unable to log in.'
-    return JsonResponse({'message': message})
+    return JsonResponse({'message': message, 'key': key})
 
 
 def logout(request):

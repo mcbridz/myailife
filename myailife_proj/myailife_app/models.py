@@ -28,7 +28,8 @@ class Comment(models.Model):
 
 
 class SessionObject(models.Model):
-    user_account = models.ForeignKey(User, on_delete=models.PROTECT)
+    user_account = models.ForeignKey(
+        User, on_delete=models.PROTECT, blank=True, null=True)
     key = models.CharField(max_length=16)
     date_created = models.DateTimeField(auto_now_add=True)
 
