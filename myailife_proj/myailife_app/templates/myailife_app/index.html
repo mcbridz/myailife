@@ -70,12 +70,12 @@
                 <input type="password" maxlength="24" v-model="register.password" v-on:input="passwordCheck">
                 <input type="password" maxlength="24" v-model="register.vpassword" v-on:input="passwordCheck">
                 <input type="email" v-model="register.emailAddress">
-                <button type="button" @click="register" v-bind:disabled="register.passwordsMatch">Register</button>
+                <button type="button" @click="registerUser" v-bind:disabled="register.passwordsMatch">Register</button>
             </form>
             <form v-if="status == 'login'">
                 <input type="text" maxlength="24" v-model="login.username">
                 <input type="password" maxlength="24" v-model="login.password">
-                <button type="button" @click="login">Log In</button>
+                <button type="button" @click="loginUser">Log In</button>
             </form>
         </div>
         <div id="bottomNav">
@@ -189,7 +189,7 @@
                         this.$forceUpdate()
                     }
                 },
-                register: function () {
+                registerUser: function () {
                     this.passwordCheck()
                     if (!this.register.passwordsMatch) {
                         return
@@ -213,7 +213,7 @@
                         })
                     }
                 },
-                login: function () {
+                loginUser: function () {
                     axios({
                         method: 'post',
                         url: '{% url "myailife:login" %}',

@@ -11,19 +11,19 @@ import datetime
 # Utility functions
 
 
-def generateUpper():
+def generate_upper():
     return chr(random.randrange(65, 91))
 
 
-def generateLower():
+def generate_lower():
     return chr(random.randrange(97, 123))
 
 
-def generateSpChr():
+def generate_special_char():
     return chr(random.randrange(33, 48))
 
 
-def generateNum():
+def generate_num():
     return str(random.randrange(0, 10))
 
 
@@ -31,13 +31,13 @@ def split(word):
     return [char for char in word]
 
 
-def generateSessionKey():
+def generate_session_key():
     key = ''
     for num in range(4):
-        key += generateUpper()
-        key += generateLower()
-        key += generateSpChr()
-        key += generateNum()
+        key += generate_upper()
+        key += generate_lower()
+        key += generate_special_char()
+        key += generate_num()
     key = split(key)
     shufflingTime = random.randrange(0, 9) + 7
     shufflingTime *= 17
@@ -46,7 +46,7 @@ def generateSessionKey():
     return ''.join(key)
 
 
-def generateSessionObject(new_key, new_user):
+def generate_session_object(new_key, new_user):
     print(new_key, new_user)
     new_session_object = SessionObject(
         user_account=None if new_user.is_anonymous else new_user, key=new_key)
@@ -58,32 +58,32 @@ def generateSessionObject(new_key, new_user):
         obj.delete()
 
 
-def validateSessionKey(key, user):
+def validate_session_key(key, user):
     session_object = SessionObject.objects.filter(key=key, user=user)
     return session_object.exists()
 
 
-def checkSessionObject(key, user):
+def check_session_object(key, user):
     return SessionObject.object.filter(user=user, key=key).exists()
 
 
-def getKey(request):
-    key = generateSessionKey()
+def get_key(request):
+    key = validate_session_key()
     print(key)
     user = request.user
-    generateSessionObject(key, user)
+    generate_session_object(key, user)
     return JsonResponse({'key': key})
 
 
 def index(request):
-    key = generateSessionKey()
+    key = validate_session_key()
     user = request.user
-    generateSessionObject(key, user)
+    generate_session_object(key, user)
     context = {'key': key}
     return render(request, 'myailife_app/index.html', context)
 
 
-def getPosts(request):
+def get_posts(request):
     posts = Post.objects.all().order_by('date_posted')
     post_list = []
     for post in posts:
@@ -119,14 +119,14 @@ def getPosts(request):
     return JsonResponse({'posts': post_list})
 
 
-def addPost(request):
+def add_post(request):
     new_post_data = json.loads(request.body)
     new_post = Post(title=new_post_data['subject'], text=new_post_data['text'])
     new_post.save()
     return JsonResponse({'message': 'Post Added'})
 
 
-def deletePost(request):
+def delete_post(request):
     post_id = json.loads(request.body)['id']
     post = Post.objects.filter(id=post_id)
     if post.exists():
@@ -136,7 +136,7 @@ def deletePost(request):
         return JsonResponse({'message': 'An Error Occurred, Please Contact Administrator Error Type: "Mismatched Post ID"'})
 
 
-def newComment(request):
+def new_comment(request):
     new_comment_data = json.loads(request.body)
 
 
@@ -154,20 +154,21 @@ def register(request):
 
 
 def login(request):
-    username = request.POST['username']
-    password = request.POST['password']
+    data = json.loads(request.body)
+    username = data['username']
+    password = data['password']
     user = django.contrib.auth.authenticate(
         request, username=username, password=password)
     message = ''
     if user is not None:
         django.contrib.auth.login(request, user)
-        key = generateSessionKey()
-        generateSessionObject(key, user)
+        key = validate_session_key()
+        generate_session_object(key, user)
         message = 'Logged in successfully.'
     else:
-        key = generateSessionKey()
+        key = validate_session_key()
         user = request.user
-        generateSessionObject(key, user)
+        generate_session_object(key, user)
         message = 'Unable to log in.'
     return JsonResponse({'message': message, 'key': key})
 
