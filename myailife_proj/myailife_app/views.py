@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from .models import Comment, Post, SessionObject
+import django.contrib.auth
+from django.contrib.auth.models import User
 from django.utils import timezone
 import json
 import random
@@ -42,8 +44,9 @@ def generateSessionKey():
     return ''.join(key)
 
 
-def generateSessionObject(key, user):
-    new_session_object = SessionObject(user=user, key=key)
+def generateSessionObject(new_key, new_user):
+    print(new_key, new_user)
+    new_session_object = SessionObject(user_account=new_user, key=new_key)
     new_session_object.save()
     # This is where we will always delete old objects (>2 days)
     old_session_objects = SessionObject.objects.filter(
@@ -52,8 +55,21 @@ def generateSessionObject(key, user):
         obj.delete()
 
 
+def validateSessionKey(key, user):
+    session_object = SessionObject.objects.filter(key=key, user=user)
+    return session_object.exists()
+
+
 def checkSessionObject(key, user):
     return SessionObject.object.filter(user=user, key=key).exists()
+
+
+def getKey(request):
+    key = generateSessionKey()
+    print(key)
+    user = request.user
+    generateSessionObject(key, user)
+    return JsonResponse({'key': key})
 
 
 def index(request):
@@ -118,7 +134,33 @@ def newComment(request):
     new_comment_data = json.loads(request.body)
 
 
-def getKey(request):
-    key = generateSessionKey()
-    generateSessionObject(key, request.user)
-    return JsonResponse({'key': key})
+def register(request):
+    username = request.POST['username']
+    password = request.POST['password']
+    vpassword = request.POST['vpassword']
+    email_address = request.POST['emailAddress']
+    if password != vpassword:
+        return JsonResponse({'message': 'passwords do not match, please try again.'})
+    else:
+        user = User.objects.create_user(username, email_address, password)
+        django.contrib.auth.login(request, user)
+        return JsonResponse({'message': 'User created and logged in.'})
+
+
+def login(request):
+    username = request.POST['username']
+    password = request.POST['password']
+    user = django.contrib.auth.authenticate(
+        request, username=username, password=password)
+    message = ''
+    if user is not None:
+        django.contrib.auth.login(request, user)
+        message = 'Logged in successfully.'
+    else:
+        message = 'Unable to log in.'
+    return JsonResponse({'message': message})
+
+
+def logout(request):
+    django.contrib.auth.logout(request)
+    return JsonResponse({'message': 'Log out successful.'})

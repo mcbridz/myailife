@@ -34,6 +34,8 @@
             <button type="button" @click="status = 'postView'">View Posts</button>
 
             <button type="button" @click="status = 'register'">Register!</button>
+
+            <button type="button" @click="status = 'login'">Log In</button>
         </div>
         <div id="bodyContent">
             <div v-if="status == 'postView'">
@@ -62,7 +64,13 @@
                 <input type="text" maxlength="24" v-model="register.username">
                 <input type="password" maxlength="24" v-model="register.password" v-on:input="passwordCheck">
                 <input type="password" maxlength="24" v-model="register.vpassword" v-on:input="passwordCheck">
+                <input type="email" v-model="register.emailAddress">
                 <button type="button" @click="register" v-bind:disabled="register.passwordsMatch">Register</button>
+            </form>
+            <form v-if="status == 'login'">
+                <input type="text" maxlength="24" v-model="login.username">
+                <input type="password" maxlength="24" v-model="login.password">
+                <button type="button" @click="login">Log In</button>
             </form>
         </div>
         <div id="bottomNav">
@@ -87,6 +95,10 @@
                     password: '',
                     vpassword: '',
                     passwordsMatch: false,
+                },
+                login: {
+                    username: '',
+                    password: '',
                 },
                 writingNewComment: false,
                 postCommentingOn: 0,
@@ -173,31 +185,78 @@
                     }
                 },
                 register: function () {
-                    this.passwordCheck
+                    this.passwordCheck()
                     if (!this.register.passwordsMatch) {
                         return
                     }
                     else {
                         axios({
                             method: 'post',
-                            url: '{%  %}',
+                            url: '{% url "myailife:register" %}',
                             headers: {
                                 'X-CSRFToken': '{{ csrf_token }}'
                             },
                             data: {
-                                username: this.register.username
+                                username: this.register.username,
+                                password: this.register.password,
+                                vpassword: this.register.vpassword,
+                                emailAddress: this.register.emailAddress,
                             }
                         }).then(response => {
                             console.log(response.data)
                             this.message = response.data['message']
                         })
                     }
+                },
+                login: function () {
+                    axios({
+                        method: 'post',
+                        url: '{% url "myailife:login" %}',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                        },
+                        data: {
+                            username: this.login.username,
+                            password: this.login.password,
+                        }
+                    }).then(response => {
+                        console.log(response.data)
+                        this.message = response.data['message']
+                    })
+                },
+                logout: function () {
+                    axios({
+                        method: 'get',
+                        url: '{% url "myailife:logout" %}',
+                    }).then(response => {
+                        console.log(response.data)
+                        this.message = response.data['message']
+                    })
+                },
+                getKey: function () {
+                    axios({
+                        method: 'get',
+                        url: '{% url "myailife:getKey" %}',
+                    }).then(response => {
+                        console.log('Returning from axios getKey call, response:')
+                        console.log(response.data)
+                        this.key = response.data['key']
+                    })
                 }
             },
             created: function () {
                 this.getPosts()
                 let key = sessionStorage.getItem('key')
                 console.log(key)
+                if (key == null) {
+                    console.log('No key found, generating...')
+                    this.getKey()
+                    console.log(this.key)
+                    sessionStorage.setItem('key', key)
+                } else {
+                    console.log('Key found, loading...')
+                    this.key = key
+                }
             }
         })
     </script>
